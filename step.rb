@@ -40,13 +40,14 @@ begin
   # Anlyzing project
   Log.info('Analyzing project')
 
-  project_helper = ProjectHelper.new(params.project_path, params.scheme, params.configuration)
+  params.bundle_ids = params.bundle_ids.split(',')
+  params.entitlements = params.entitlements.split(',')
+  project_helper = ProjectHelper.new(params.bundle_ids, params.entitlements, params.codesign_entity, params.platform_name)
   codesign_identity = project_helper.project_codesign_identity
   team_id = project_helper.project_team_id
 
   Log.print("project codesign identity: #{codesign_identity}")
   Log.print("project team id: #{team_id}")
-  Log.print("uses xcode managed signing: #{project_helper.uses_xcode_auto_codesigning?}")
   Log.print("main target's platform: #{project_helper.platform}")
 
   targets = project_helper.targets.collect(&:name)
@@ -87,42 +88,8 @@ begin
   Log.info('Ensure Provisioning Profiles on Developer Portal')
 
   profile_helper = ProfileHelper.new(project_helper, cert_helper)
-  xcode_managed_signing = profile_helper.ensure_profiles(params.distribution_type, auth.test_devices, params.generate_profiles == 'yes', params.min_profile_days_valid)
+  profile_helper.ensure_profiles(params.distribution_type, auth.test_devices, params.generate_profiles == 'yes', params.min_profile_days_valid)
   ###
-
-  unless xcode_managed_signing
-    # Apply code sign setting in project
-    Log.info('Apply code sign setting in project')
-
-    targets.each do |target_name|
-      bundle_id = project_helper.target_bundle_id(target_name)
-
-      puts
-      Log.success("configure target: #{target_name} (#{bundle_id})")
-
-      code_sign_identity = nil
-      provisioning_profile = nil
-
-      if cert_helper.development_certificate_info
-        certificate = cert_helper.development_certificate_info.certificate
-        code_sign_identity = certificate_common_name(certificate)
-
-        portal_profile = profile_helper.profiles_by_bundle_id('development')[bundle_id].portal_profile
-        provisioning_profile = portal_profile.uuid
-      elsif cert_helper.production_certificate_info
-        certificate = cert_helper.production_certificate_info.certificate
-        code_sign_identity = certificate_common_name(certificate)
-
-        portal_profile = profile_helper.profiles_by_bundle_id(params.distribution_type)[bundle_id].portal_profile
-        provisioning_profile = portal_profile.uuid
-      else
-        raise "no codesign settings generated for target: #{target_name} (#{bundle_id})"
-      end
-
-      project_helper.force_code_sign_properties(target_name, team_id, code_sign_identity, provisioning_profile)
-    end
-    ###
-  end
 
   # Install certificates
   Log.info('Install certificates')
@@ -152,22 +119,28 @@ begin
     certificate = cert_helper.development_certificate_info.certificate
     code_sign_identity = certificate_common_name(certificate)
 
-    portal_profile = profile_helper.profiles_by_bundle_id('development')[bundle_id].portal_profile
-    provisioning_profile = portal_profile.uuid
+    provisioning_profiles = []
+    for bundle_id in params.bundle_ids
+      portal_profile = profile_helper.profiles_by_bundle_id('development')[bundle_id].portal_profile
+      provisioning_profiles << portal_profile.uuid
+    end
 
     outputs['BITRISE_DEVELOPMENT_CODESIGN_IDENTITY'] = code_sign_identity
-    outputs['BITRISE_DEVELOPMENT_PROFILE'] = provisioning_profile
+    outputs['BITRISE_DEVELOPMENT_PROFILE'] = provisioning_profiles.join(',')
   end
 
   if params.distribution_type != 'development' && cert_helper.production_certificate_info
     certificate = cert_helper.production_certificate_info.certificate
     code_sign_identity = certificate_common_name(certificate)
 
-    portal_profile = profile_helper.profiles_by_bundle_id(params.distribution_type)[bundle_id].portal_profile
-    provisioning_profile = portal_profile.uuid
+    provisioning_profiles = []
+    for bundle_id in params.bundle_ids
+      portal_profile = profile_helper.profiles_by_bundle_id(params.distribution_type)[bundle_id].portal_profile
+      provisioning_profiles << portal_profile.uuid
+    end
 
     outputs['BITRISE_PRODUCTION_CODESIGN_IDENTITY'] = code_sign_identity
-    outputs['BITRISE_PRODUCTION_PROFILE'] = provisioning_profile
+    outputs['BITRISE_PRODUCTION_PROFILE'] = provisioning_profiles.join(',')
   end
 
   outputs.each do |key, value|

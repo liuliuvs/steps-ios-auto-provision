@@ -42,8 +42,6 @@ class ProfileHelper
         ensure_manual_profiles(distr_type, @project_helper.platform, min_profile_days_valid, test_devices)
       end
     end
-
-    @project_helper.uses_xcode_auto_codesigning?
   end
 
   def profiles_by_bundle_id(distribution_type)
