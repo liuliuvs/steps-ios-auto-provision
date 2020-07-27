@@ -42,8 +42,6 @@ class ProfileHelper
         ensure_manual_profiles(distr_type, @project_helper.platform, min_profile_days_valid, test_devices)
       end
     end
-
-    @project_helper.uses_xcode_auto_codesigning?
   end
 
   def profiles_by_bundle_id(distribution_type)
@@ -56,8 +54,7 @@ class ProfileHelper
     certificate = @certificate_helper.certificate_info(distribution_type).portal_certificate
 
     targets = @project_helper.targets
-    targets.each do |target|
-      target_name = target.name
+    targets.each do |target_name|
       bundle_id = @project_helper.target_bundle_id(target_name)
       entitlements = @project_helper.target_entitlements(target_name) || {}
 
@@ -78,8 +75,7 @@ class ProfileHelper
     certificate = @certificate_helper.certificate_info(distribution_type).portal_certificate
 
     targets = @project_helper.targets
-    targets.each do |target|
-      target_name = target.name
+    targets.each do |target_name|
       bundle_id = @project_helper.target_bundle_id(target_name)
       entitlements = @project_helper.target_entitlements(target_name) || {}
 

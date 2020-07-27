@@ -83,6 +83,18 @@ inputs:
     - "ad-hoc"
     - "enterprise"
     is_required: true
+- bundle_ids:
+  opts:
+    title: The List of Bundle IDs
+    description: |-
+      __Example:__ `com.verishop.verishop,com.verishop.verishop-NotificationServices`
+    is_required: true
+- entitlements:
+  opts:
+    title: The List of Entitlement Files
+    description: |-
+      __Example:__ `file1.entitlements,file2.entitlements`
+    is_required: true
 - team_id:
   opts:
     title: The Developer Portal team ID
@@ -92,34 +104,23 @@ inputs:
       Otherwise specify this input if you want to manage the Provisioning Profiles with a different team than the one set in your project.
       If you leave it empty the team defined by the project will be used.
       __Example:__ `1MZX23ABCD4`
-- project_path: $BITRISE_PROJECT_PATH
-  opts:
-    title: Xcode Project (or Workspace) path
-    description: A `.xcodeproj` or `.xcworkspace` path.
     is_required: true
-- scheme: $BITRISE_SCHEME
+- codesign_identity:
   opts:
-    title: Scheme name
-    description: The Xcode Scheme to use.
+    title: The codesign identity's name
+    description: |-
+      The codesign identity's name.
+
+      Example: `iPhone Developer: Bitrise Bot (VV2J4SV8V4)`
     is_required: true
-- configuration:
+- platform_name:
   opts:
-    title: Configuration name
+    title: The Platform Name
     description: |-
-      The Xcode Configuration to use.
-      By default your Scheme defines which Configuration (Debug, Release, ...) should be used,
-      but you can overwrite it with this option.
-- generate_profiles: "no"
-  opts:
-    title: Should the step try to generate Provisioning Profiles even if Xcode managed signing is enabled in the Xcode project?
-    description: |-
-      In the case of __Xcode managed code signing__ projects, by default the step downloads and installs the Xcode managed Provisioning Profiles.
-      If this input is set to: `yes`, the step will try to manage the Provisioning Profiles by itself (__like in the case of Manual code signing projects__),
-      the step will fall back to use the Xcode managed Provisioning Profiles if there is an issue.
-      __This input has no effect in the case of Manual codesigning projects.__
-    value_options:
-    - "yes"
-    - "no"
+      The platform name.
+
+      Example: `ios`
+    is_required: true
 - min_profile_days_valid: 0
   opts:
     title: The minimum days the Provisioning Profile should be valid
