@@ -136,7 +136,7 @@ GEM
       domain_name (~> 0.5)
     httpclient (2.8.3)
     jaro_winkler (1.5.4)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     json (2.5.1)
     jwt (2.2.2)
     memoist (0.16.2)
